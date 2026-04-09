@@ -2,7 +2,6 @@
 *.retry
 *.log
 .vagrant/
-.ansible/
 
 # Terraform (if applicable)
 *.tfstate
@@ -24,10 +23,3 @@ Thumbs.db
 *.swp
 *.swo
 
-# Temporary files
-*.tmp
-*.bak
-
-# Secrets
-secrets.yml
-vault_pass.txt

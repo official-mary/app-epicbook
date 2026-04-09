@@ -1,0 +1,12 @@
+---
+app_repo: "https://github.com/pravinmishraaws/theepicbook.git"
+app_dest: "/var/www/epicbook"
+app_user: "www-data"
+app_group: "www-data"
+nginx_site_name: "epicbook"
+app_port: 3000
+db_user: "epicbook_user"
+db_name: "bookstore"
+db_host: "epicbook-prod-mysql-4e6c3z.mysql.database.azure.com"
+db_password: "EpicDB@2026!"
+pm2_home: "/var/www/.pm2"
