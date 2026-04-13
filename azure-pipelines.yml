@@ -1,0 +1,65 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: SelfHostedPool
+
+stages:
+
+  - stage: Configure
+    displayName: 'Configure and Deploy EpicBook'
+    jobs:
+      - job: AnsibleDeploy
+        displayName: 'Run Ansible Playbook'
+        variables:
+          ANSIBLE_HOST_KEY_CHECKING: 'False'
+        steps:
+          - checkout: self
+            displayName: 'Checkout app repo'
+
+          - task: DownloadSecureFile@1
+            displayName: 'Download SSH private key'
+            name: sshKey
+            inputs:
+              secureFile: 'epicbook_key'
+
+          - script: |
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq ansible
+              ansible --version
+            displayName: 'Install Ansible'
+
+          - script: |
+              cp $(sshKey.secureFilePath) /tmp/epicbook_key
+              chmod 600 /tmp/epicbook_key
+              echo "SSH key ready"
+            displayName: 'Set up SSH key'
+
+          - script: |
+              echo "Inventory:"
+              cat inventory.ini
+              echo "Group vars:"
+              cat group_vars/web/main.yml
+            displayName: 'Verify inventory and variables'
+            workingDirectory: $(System.DefaultWorkingDirectory)
+
+          - script: |
+              ansible all -i inventory.ini -m ping \
+                --private-key /tmp/epicbook_key
+            displayName: 'Test Ansible connectivity'
+            workingDirectory: $(System.DefaultWorkingDirectory)
+
+          - script: |
+              ansible-playbook -i inventory.ini site.yml -v \
+                --private-key /tmp/epicbook_key
+            displayName: 'Run Ansible playbook'
+            workingDirectory: $(System.DefaultWorkingDirectory)
+
+          - script: |
+              ansible all -i inventory.ini -m shell \
+                -a "curl -s -o /dev/null -w '%{http_code}' http://localhost" \
+                --private-key /tmp/epicbook_key
+            displayName: 'Verify Nginx is serving'
+            workingDirectory: $(System.DefaultWorkingDirectory)
